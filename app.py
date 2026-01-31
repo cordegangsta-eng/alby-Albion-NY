@@ -5,7 +5,6 @@ app = Flask(__name__)
 
 @app.route('/')
 def home():
-    # This looks for index.html inside a folder named 'templates'
     return render_template('index.html')
 
 if __name__ == "__main__":
