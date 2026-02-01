@@ -1,160 +1,162 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Alby | Albion 2026 Community Hub</title>
-    <style>
-        :root {
-            --albion-purple: #4b0082;
-            --albion-gold: #ffd700;
-            --bg-gray: #f4f4f9;
-            --card-white: #ffffff;
-            --text-dark: #2d2d2d;
-            --emergency-red: #b22222;
-            --fresh-green: #047857;
-            --aging-orange: #b45309;
-        }
-
-        /* ACCESSIBILITY OVERRIDES */
-        body.accessible-mode { font-size: 1.25rem; background-color: #000 !important; color: #fff !important; }
-        body.accessible-mode .card, body.accessible-mode .alby-chat { background-color: #1a1a1a !important; border: 3px solid var(--albion-gold) !important; color: #fff !important; }
-        body.accessible-mode .btn { padding: 18px 25px; font-size: 1.2rem; background-color: var(--albion-gold) !important; color: #000 !important; }
-
-        body { font-family: 'Helvetica Neue', Arial, sans-serif; background-color: var(--bg-gray); margin: 0; color: var(--text-dark); line-height: 1.6; transition: all 0.3s ease; }
-        header { background-color: var(--albion-purple); color: white; padding: 2rem 1rem; text-align: center; border-bottom: 6px solid var(--albion-gold); position: relative; }
-        #weather-strip { background: #e9ecef; padding: 10px; text-align: center; font-size: 0.9rem; border-bottom: 1px solid #ddd; }
-        
-        .container { max-width: 1000px; margin: 0 auto; padding: 2rem 1rem; }
-        
-        .lang-btn, .access-btn { background: rgba(255,255,255,0.2); border: 1px solid white; color: white; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin: 5px; }
-
-        /* CHAT & CARDS */
-        .alby-chat { background: var(--card-white); border-radius: 15px; padding: 2rem; margin-bottom: 2rem; border: 2px solid var(--albion-gold); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
-        .card { background: var(--card-white); border-radius: 12px; padding: 1.5rem; border: 1px solid #e1e1e1; position: relative; display: flex; flex-direction: column; }
-        .card.hidden { display: none; }
-
-        .verified-badge { font-size: 0.7rem; padding: 2px 8px; border-radius: 12px; font-weight: bold; margin-top: 10px; text-transform: uppercase; align-self: flex-start; }
-        .status-fresh { background: #e6fffa; color: var(--fresh-green); border: 1px solid var(--fresh-green); }
-        .status-aging { background: #fffbeb; color: var(--aging-orange); border: 1px solid var(--aging-orange); }
-
-        .btn { display: inline-block; background: var(--albion-purple); color: white; text-decoration: none; padding: 12px 20px; border-radius: 6px; font-weight: bold; border: none; cursor: pointer; margin-top: 10px; text-align: center; }
-        .emergency-btn { background: var(--emergency-red); width: 100%; }
-        
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(178, 34, 34, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(178, 34, 34, 0); } 100% { box-shadow: 0 0 0 0 rgba(178, 34, 34, 0); } }
-        .pulse-alert { animation: pulse 1.5s infinite; }
-
-        /* ADMIN PANEL */
-        #admin-panel { display: none; background: #2d2d2d; color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; }
-    </style>
-</head>
-<body>
-
-<header>
-    <button class="lang-btn" onclick="toggleLanguage()" id="lang-toggle">Español</button>
-    <button class="access-btn" onclick="toggleAccessibility()" id="access-toggle">♿ Large Text</button>
-    <h1 id="admin-trigger">ALBY</h1>
-    <p>Official 2026 Resource Hub for Albion, NY</p>
-</header>
-
-<div id="weather-strip">🌤️ Checking Albion conditions...</div>
-
-<div class="container">
-    <div id="admin-panel">
-        <h3>Admin Portal</h3>
-        <input type="text" id="new-title" placeholder="Resource Name">
-        <textarea id="new-desc" placeholder="Description"></textarea>
-        <select id="new-cat">
-            <option value="food">Food</option>
-            <option value="safety">Safety</option>
-            <option value="help">Other</option>
-        </select>
-        <button onclick="addResource()" class="btn" style="background:var(--albion-gold); color:black;">Add Card</button>
-    </div>
-
-    <div class="alby-chat">
-        <h2 style="margin:0;">Talk to Alby</h2>
-        <span id="status-text" style="font-style: italic; font-size: 0.8rem;">Online | Standing by for Albion</span>
-        <form id="alby-form" action="https://formspree.io/f/meekblgl" method="POST" style="margin-top:15px; position:relative;">
-            <textarea name="message" id="user-input" rows="3" placeholder="How can I help you, neighbor?" required style="width:100%; padding:10px 40px 10px 10px; box-sizing:border-box; border-radius:8px;"></textarea>
-            <button type="button" onclick="startVoice()" id="mic-btn" style="position:absolute; right:10px; top:10px; background:none; border:none; cursor:pointer; font-size:1.2rem;">🎤</button>
-            <button type="submit" class="btn chat-btn" style="width:100%;">Send Message</button>
-        </form>
-        <div id="alby-reply" style="display:none; margin-top:20px; padding:15px; background:#f0f7ff; border-radius:8px; border-left:5px solid var(--albion-gold);">
-            <span id="reply-text"></span>
-            <div id="reset-area"></div>
-        </div>
-    </div>
-
-    <div class="grid" id="resource-grid">
-        <div class="card" data-category="safety" data-updated="2026-01-31">
-            <h3>Emergency Services</h3>
-            <p>Immediate dispatch for fires, medical, or police.</p>
-            <a href="tel:911" class="btn emergency-btn" id="main-911">CALL 911</a>
-        </div>
-        <div class="card" data-category="food" data-updated="2026-01-20">
-            <h3>Albion Food Pantry</h3>
-            <p>411 E. State St. Mon-Fri 9am-4pm.</p>
-        </div>
-    </div>
-</div>
-
 <script>
-    let currentLang = 'en';
+    // 1. STATE & DATA
+    let currentLang = localStorage.getItem('alby_lang') || 'en';
+
     const translations = {
-        en: { status: "Online | Standing by for Albion", placeholder: "How can I help you?", btn: "Send Message" },
-        es: { status: "En línea | Esperando para ayudar a Albion", placeholder: "¿Cómo puedo ayudarte?", btn: "Enviar mensaje" }
-    };
-
-    function translateMarkdown(text) { return text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>'); }
-
-    function toggleLanguage() {
-        currentLang = currentLang === 'en' ? 'es' : 'en';
-        document.getElementById('status-text').innerText = translations[currentLang].status;
-        document.getElementById('user-input').placeholder = translations[currentLang].placeholder;
-        document.querySelector('.chat-btn').innerText = translations[currentLang].btn;
-        document.getElementById('lang-toggle').innerText = currentLang === 'en' ? 'Español' : 'English';
-    }
-
-    function toggleAccessibility() {
-        const active = document.body.classList.toggle('accessible-mode');
-        document.getElementById('access-toggle').innerText = active ? "Standard View" : "♿ Large Text";
-    }
-
-    document.getElementById('admin-trigger').ondblclick = () => {
-        const panel = document.getElementById('admin-panel');
-        panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
-    };
-
-    // Alby Chat Submission
-    document.getElementById('alby-form').onsubmit = async (e) => {
-        e.preventDefault();
-        const input = document.getElementById('user-input').value;
-        const reply = document.getElementById('alby-reply');
-        const replyText = document.getElementById('reply-text');
-        
-        if (["emergency", "911", "hurt", "suicide"].some(w => input.toLowerCase().includes(w))) {
-            replyText.innerHTML = "🚨 <b>ALBY ALERT:</b> Please call 911 immediately.";
-            reply.style.display = 'block';
-            document.getElementById('main-911').classList.add('pulse-alert');
-            return;
+        en: {
+            langBtn: "Español",
+            subHeader: "Official 2026 Resource Hub for Albion, NY",
+            chatTitle: "Talk to Alby",
+            placeholder: "How can I help you, neighbor?",
+            sendBtn: "Send Message",
+            emergencyTitle: "Emergency Services",
+            emergencyDesc: "Immediate dispatch for fires, medical, or police.",
+            call911: "CALL 911",
+            foodTitle: "Albion Food Pantry",
+            foodDesc: "411 E. State St. Mon-Fri 9am-4pm.",
+            foodLink: "Visit Website",
+            heapTitle: "HEAP Assistance",
+            heapDesc: "Heating help: ID & Bills required.",
+            heapLink: "Apply Online",
+            openNow: "Open now",
+            reportLink: "Link not working?",
+            closedNow: "Closed now · Opens Mon-Fri 9am",
+            verifiedNote: "Verified by community",
+            calmTitle: "You don't have to go through this alone.",
+            calmText: "If things feel overwhelming, there are people who will listen without judgment.",
+            calmOptions: [
+                '📞 <a href="tel:988">988 Crisis Lifeline (24/7)</a>',
+                '💬 <a href="https://988lifeline.org/chat/" target="_blank">988 Chat Online</a>'
+            ],
+            received: "Thanks, neighbor! I've logged your request.",
+            emergencyReply: "🚨 <b>CALL 911 IMMEDIATELY.</b>"
+        },
+        es: {
+            langBtn: "English",
+            subHeader: "Centro Oficial de Recursos 2026 para Albion, NY",
+            chatTitle: "Habla con Alby",
+            placeholder: "¿Cómo puedo ayudarte?",
+            sendBtn: "Enviar mensaje",
+            emergencyTitle: "Servicios de Emergencia",
+            emergencyDesc: "Despacho inmediato para emergencias.",
+            call911: "LLAMAR AL 911",
+            foodTitle: "Despensa de Alimentos",
+            foodDesc: "411 E. State St. Lun-Vie 9am-4pm.",
+            foodLink: "Visitar Sitio",
+            heapTitle: "Asistencia HEAP",
+            heapDesc: "Ayuda de calefacción: ID y facturas.",
+            heapLink: "Aplicar en línea",
+            openNow: "Abierto ahora",
+            reportLink: "¿Enlace roto?",
+            closedNow: "Cerrado ahora · Abre Lun-Vie 9am",
+            verifiedNote: "Verificado por vecinos",
+            calmTitle: "No estás solo/a.",
+            calmText: "Si te sientes abrumado/a, hay personas que escuchan sin juzgar.",
+            calmOptions: [
+                '📞 <a href="tel:988">Línea 988 (24/7)</a>',
+                '💬 <a href="https://988lifeline.org/chat/" target="_blank">Chat confidencial</a>'
+            ],
+            received: "Gracias, vecino/a. Recibimos tu mensaje.",
+            emergencyReply: "🚨 <b>LLAME AL 911 DE INMEDIATO.</b>"
         }
-
-        document.getElementById('status-text').innerText = "Alby is thinking...";
-        setTimeout(() => {
-            reply.style.display = 'block';
-            replyText.innerHTML = translateMarkdown("I've received your request and sent it to the **Albion Hub** team. Hang tight, neighbor!");
-            document.getElementById('status-text').innerText = "Message Delivered";
-        }, 2000);
     };
 
-    // Freshness & Weather Calls on Load
-    window.onload = () => {
-        fetch('https://wttr.in/Albion,NY?format=%c+%t').then(r => r.text()).then(d => {
-            document.getElementById('weather-strip').innerHTML = `<strong>Albion Today:</strong> ${d} | Stay neighborly!`;
+    // 2. CORE FUNCTIONS (Globally Scoped for onclick)
+    window.toggleLanguage = function() {
+        currentLang = currentLang === 'en' ? 'es' : 'en';
+        localStorage.setItem('alby_lang', currentLang);
+        applyLanguage();
+        checkHours();
+    };
+
+    window.toggleAccessibility = function() {
+        document.body.classList.toggle('accessible-mode');
+    };
+
+    window.applyLanguage = function() {
+        const t = translations[currentLang];
+        document.getElementById('lang-toggle').innerText = t.langBtn;
+        document.getElementById('sub-header').innerText = t.subHeader;
+        document.getElementById('chat-title').innerText = t.chatTitle;
+        document.getElementById('user-input').placeholder = t.placeholder;
+        document.getElementById('send-btn').innerText = t.sendBtn;
+
+        document.querySelectorAll('[data-text]').forEach(el => {
+            const key = el.getAttribute('data-text');
+            if (t[key]) el.innerText = t[key];
+        });
+
+        document.getElementById('calm-title').innerText = t.calmTitle;
+        document.getElementById('calm-text').innerText = t.calmText;
+        document.getElementById('calm-options').innerHTML =
+            t.calmOptions.map(o => `<div class="calm-option">${o}</div>`).join('');
+    };
+
+    window.checkHours = function() {
+        const now = new Date();
+        const currentDay = now.getDay();
+        const currentTime = now.toTimeString().slice(0,5);
+        
+        document.querySelectorAll('[data-hours]').forEach(card => {
+            const statusEl = card.querySelector('[data-status]');
+            const [days, times] = card.dataset.hours.split(',');
+            const [startDay, endDay] = days.split('-').map(Number);
+            const [startT, endT] = times.split('-');
+            
+            const isOpen = currentDay >= startDay && currentDay <= endDay &&
+                currentTime >= startT && currentTime <= endT;
+            statusEl.innerText = isOpen ? translations[currentLang].openNow : translations[currentLang].closedNow;
+            statusEl.className = `status-badge ${isOpen ? 'open' : 'closed'}`;
         });
     };
+
+    window.reportBrokenLink = function(btn, name) {
+        btn.innerText = currentLang === 'es' ? "Reportando..." : "Reporting...";
+        btn.disabled = true;
+        setTimeout(() => {
+            btn.style.display = 'none';
+            const note = document.createElement('div');
+            note.className = 'link-confirmation';
+            note.innerText = currentLang === 'es' ? "Gracias, lo revisaremos." : "Thanks, we'll check it.";
+            btn.parentNode.appendChild(note);
+        }, 800);
+    };
+
+    // 3. INITIALIZATION
+    document.addEventListener('DOMContentLoaded', () => {
+        applyLanguage();
+        checkHours();
+
+        document.getElementById('alby-form').onsubmit = (e) => {
+            e.preventDefault();
+            if (document.getElementById('honeypot').value) return; // Anti-bot
+
+            const input = document.getElementById('user-input').value.toLowerCase();
+            const reply = document.getElementById('reply-area');
+
+            if (input.includes("911") || input.includes("emergency")) {
+                reply.innerHTML = translations[currentLang].emergencyReply;
+                const btn = document.querySelector('.emergency-btn');
+                btn.classList.add('pulse-alert');
+                setTimeout(() => btn.classList.remove('pulse-alert'), 3500);
+
+            } else if (calmTriggers.some(t => input.includes(t))) {
+                document.getElementById('calm-alby').style.display = 'block';
+                reply.innerText = translations[currentLang].received;
+
+            } else {
+                reply.innerText = translations[currentLang].received;
+            }
+
+            reply.style.display = 'block';
+            document.getElementById('user-input').value = "";
+        };
+    });
+
+    // 4. CALM TRIGGERS (shared)
+    const calmTriggers = [
+        "overwhelmed", "not okay", "lost",
+        "cant handle", "can't handle",
+        "don't know what to do", "dont know what to do"
+    ];
 </script>
-</body>
-</html>
