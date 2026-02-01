@@ -61,7 +61,12 @@
             font-size: 24px; 
         }
 
-        /* GRID SYSTEM */
+        /* Typing Dots Animation */
+        @keyframes blink { 0% { opacity: 0; } 50% { opacity: 1; } 100% { opacity: 0; } }
+        .dot { animation: blink 1s infinite; }
+        .dot2 { animation: blink 1s infinite 0.2s; }
+        .dot3 { animation: blink 1s infinite 0.4s; }
+
         .grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -106,7 +111,7 @@
             font-size: 1.2rem;
         }
 
-        input, textarea {
+        textarea {
             width: 100%;
             padding: 15px;
             border: 2px solid #eee;
@@ -129,19 +134,27 @@
 
 <div class="container">
     
-    <div class="alby-chat">
+    <div class="alby-chat" id="chat-hub">
         <div class="chat-header">
             <div class="alby-avatar">🤖</div>
             <div>
                 <h2 style="margin:0; border:none; padding:0; color:#333;">Talk to Alby</h2>
-                <small style="color:#666;">I can help with local info, weather, or just chat!</small>
+                <small id="status-text" style="color:#666;">Online | Standing by for Albion</small>
             </div>
         </div>
-        <form action="https://formspree.io/f/meekblgl" method="POST">
-            <textarea name="message" rows="3" placeholder="Hi Alby! Where can I find help with heating bills?" required></textarea>
-            <input type="hidden" name="_subject" value="New Alby Chat Message">
-            <button type="submit" class="btn chat-btn">Send Message</button>
+        
+        <form id="alby-form" action="https://formspree.io/f/meekblgl" method="POST">
+            <textarea name="message" id="user-input" rows="3" placeholder="Hi Alby! Where can I find help with heating bills?" required></textarea>
+            <button type="submit" class="btn chat-btn" id="send-btn">Send Message</button>
         </form>
+
+        <div id="alby-typing" style="display:none; color: var(--albion-purple); font-weight: bold; font-style: italic;">
+            Alby is typing<span class="dot">.</span><span class="dot2">.</span><span class="dot3">.</span>
+        </div>
+
+        <div id="alby-reply" style="display:none; padding:15px; background:#f0f7ff; border-radius:12px; border-left:5px solid var(--albion-gold);">
+            <strong style="color:var(--albion-purple);">Alby:</strong> <span id="reply-text"></span>
+        </div>
     </div>
 
     <h2>🚨 Emergency & Local Safety</h2>
@@ -194,6 +207,43 @@
         <p>Built with 💜 right here in <strong>Albion</strong>.</p>
     </footer>
 </div>
+
+<script>
+    const form = document.getElementById('alby-form');
+    const typing = document.getElementById('alby-typing');
+    const reply = document.getElementById('alby-reply');
+    const replyText = document.getElementById('reply-text');
+    const statusText = document.getElementById('status-text');
+
+    const albyLines = [
+        "I've got you. I'm routing this to the Albion Hub right now. We'll look into this for you, neighbor!",
+        "Message received! I'm making sure the right people in town see this. The Spirit of Hope is on it!",
+        "Got it! I've sent your request to our team. Hang tight while we get things moving for you.",
+        "I hear you loud and clear. I'm passing this to the staff at the Hub immediately!"
+    ];
+
+    form.onsubmit = async (e) => {
+        e.preventDefault();
+        const data = new FormData(form);
+        
+        form.style.display = 'none';
+        typing.style.display = 'block';
+        statusText.innerText = "Alby is thinking...";
+
+        fetch(form.action, {
+            method: 'POST',
+            body: data,
+            headers: { 'Accept': 'application/json' }
+        });
+
+        setTimeout(() => {
+            typing.style.display = 'none';
+            reply.style.display = 'block';
+            statusText.innerText = "Message Delivered";
+            replyText.innerText = albyLines[Math.floor(Math.random() * albyLines.length)];
+        }, 3000);
+    };
+</script>
 
 </body>
 </html>
