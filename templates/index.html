@@ -1,162 +1,35 @@
-<script>
-    // 1. STATE & DATA
-    let currentLang = localStorage.getItem('alby_lang') || 'en';
-
-    const translations = {
-        en: {
-            langBtn: "Español",
-            subHeader: "Official 2026 Resource Hub for Albion, NY",
-            chatTitle: "Talk to Alby",
-            placeholder: "How can I help you, neighbor?",
-            sendBtn: "Send Message",
-            emergencyTitle: "Emergency Services",
-            emergencyDesc: "Immediate dispatch for fires, medical, or police.",
-            call911: "CALL 911",
-            foodTitle: "Albion Food Pantry",
-            foodDesc: "411 E. State St. Mon-Fri 9am-4pm.",
-            foodLink: "Visit Website",
-            heapTitle: "HEAP Assistance",
-            heapDesc: "Heating help: ID & Bills required.",
-            heapLink: "Apply Online",
-            openNow: "Open now",
-            reportLink: "Link not working?",
-            closedNow: "Closed now · Opens Mon-Fri 9am",
-            verifiedNote: "Verified by community",
-            calmTitle: "You don't have to go through this alone.",
-            calmText: "If things feel overwhelming, there are people who will listen without judgment.",
-            calmOptions: [
-                '📞 <a href="tel:988">988 Crisis Lifeline (24/7)</a>',
-                '💬 <a href="https://988lifeline.org/chat/" target="_blank">988 Chat Online</a>'
-            ],
-            received: "Thanks, neighbor! I've logged your request.",
-            emergencyReply: "🚨 <b>CALL 911 IMMEDIATELY.</b>"
-        },
-        es: {
-            langBtn: "English",
-            subHeader: "Centro Oficial de Recursos 2026 para Albion, NY",
-            chatTitle: "Habla con Alby",
-            placeholder: "¿Cómo puedo ayudarte?",
-            sendBtn: "Enviar mensaje",
-            emergencyTitle: "Servicios de Emergencia",
-            emergencyDesc: "Despacho inmediato para emergencias.",
-            call911: "LLAMAR AL 911",
-            foodTitle: "Despensa de Alimentos",
-            foodDesc: "411 E. State St. Lun-Vie 9am-4pm.",
-            foodLink: "Visitar Sitio",
-            heapTitle: "Asistencia HEAP",
-            heapDesc: "Ayuda de calefacción: ID y facturas.",
-            heapLink: "Aplicar en línea",
-            openNow: "Abierto ahora",
-            reportLink: "¿Enlace roto?",
-            closedNow: "Cerrado ahora · Abre Lun-Vie 9am",
-            verifiedNote: "Verificado por vecinos",
-            calmTitle: "No estás solo/a.",
-            calmText: "Si te sientes abrumado/a, hay personas que escuchan sin juzgar.",
-            calmOptions: [
-                '📞 <a href="tel:988">Línea 988 (24/7)</a>',
-                '💬 <a href="https://988lifeline.org/chat/" target="_blank">Chat confidencial</a>'
-            ],
-            received: "Gracias, vecino/a. Recibimos tu mensaje.",
-            emergencyReply: "🚨 <b>LLAME AL 911 DE INMEDIATO.</b>"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alby | Albion 2026 Community Hub</title>
+    <style>
+        :root {
+            --albion-purple: #4b0082;
+            --albion-gold: #ffd700;
+            --bg-gray: #f4f4f9;
+            --card-white: #ffffff;
+            --text-dark: #2d2d2d;
+            --emergency-red: #b22222;
+            --fresh-green: #047857;
         }
-    };
 
-    // 2. CORE FUNCTIONS (Globally Scoped for onclick)
-    window.toggleLanguage = function() {
-        currentLang = currentLang === 'en' ? 'es' : 'en';
-        localStorage.setItem('alby_lang', currentLang);
-        applyLanguage();
-        checkHours();
-    };
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; background-color: var(--bg-gray); margin: 0; color: var(--text-dark); line-height: 1.6; transition: all 0.3s ease; }
+        header { background-color: var(--albion-purple); color: white; padding: 2rem 1rem; text-align: center; border-bottom: 6px solid var(--albion-gold); }
+        .container { max-width: 1000px; margin: 0 auto; padding: 2rem 1rem; }
 
-    window.toggleAccessibility = function() {
-        document.body.classList.toggle('accessible-mode');
-    };
+        /* ACCESSIBILITY */
+        body.accessible-mode { font-size: 1.25rem; background-color: #000 !important; color: #fff !important; }
+        body.accessible-mode .card, body.accessible-mode .alby-chat { background-color: #1a1a1a !important; border: 3px solid var(--albion-gold) !important; color: #fff !important; }
+        body.accessible-mode .btn { padding: 18px 25px; font-size: 1.2rem; background-color: var(--albion-gold) !important; color: #000 !important; }
 
-    window.applyLanguage = function() {
-        const t = translations[currentLang];
-        document.getElementById('lang-toggle').innerText = t.langBtn;
-        document.getElementById('sub-header').innerText = t.subHeader;
-        document.getElementById('chat-title').innerText = t.chatTitle;
-        document.getElementById('user-input').placeholder = t.placeholder;
-        document.getElementById('send-btn').innerText = t.sendBtn;
+        /* CHAT & CALM BOX */
+        .alby-chat { background: var(--card-white); border-radius: 15px; padding: 2rem; margin-bottom: 2rem; border: 2px solid var(--albion-gold); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        .calm-box { background: #f8fafc; border-left: 5px solid var(--albion-gold); padding: 1.2rem; margin-top: 1rem; border-radius: 8px; display: none; }
+        .calm-box h4 { margin: 0 0 8px 0; color: var(--albion-purple); }
+        .calm-option { margin: 6px 0; font-weight: bold; }
+        .calm-option a { color: var(--albion-purple); text-decoration: underline; }
 
-        document.querySelectorAll('[data-text]').forEach(el => {
-            const key = el.getAttribute('data-text');
-            if (t[key]) el.innerText = t[key];
-        });
-
-        document.getElementById('calm-title').innerText = t.calmTitle;
-        document.getElementById('calm-text').innerText = t.calmText;
-        document.getElementById('calm-options').innerHTML =
-            t.calmOptions.map(o => `<div class="calm-option">${o}</div>`).join('');
-    };
-
-    window.checkHours = function() {
-        const now = new Date();
-        const currentDay = now.getDay();
-        const currentTime = now.toTimeString().slice(0,5);
-        
-        document.querySelectorAll('[data-hours]').forEach(card => {
-            const statusEl = card.querySelector('[data-status]');
-            const [days, times] = card.dataset.hours.split(',');
-            const [startDay, endDay] = days.split('-').map(Number);
-            const [startT, endT] = times.split('-');
-            
-            const isOpen = currentDay >= startDay && currentDay <= endDay &&
-                currentTime >= startT && currentTime <= endT;
-            statusEl.innerText = isOpen ? translations[currentLang].openNow : translations[currentLang].closedNow;
-            statusEl.className = `status-badge ${isOpen ? 'open' : 'closed'}`;
-        });
-    };
-
-    window.reportBrokenLink = function(btn, name) {
-        btn.innerText = currentLang === 'es' ? "Reportando..." : "Reporting...";
-        btn.disabled = true;
-        setTimeout(() => {
-            btn.style.display = 'none';
-            const note = document.createElement('div');
-            note.className = 'link-confirmation';
-            note.innerText = currentLang === 'es' ? "Gracias, lo revisaremos." : "Thanks, we'll check it.";
-            btn.parentNode.appendChild(note);
-        }, 800);
-    };
-
-    // 3. INITIALIZATION
-    document.addEventListener('DOMContentLoaded', () => {
-        applyLanguage();
-        checkHours();
-
-        document.getElementById('alby-form').onsubmit = (e) => {
-            e.preventDefault();
-            if (document.getElementById('honeypot').value) return; // Anti-bot
-
-            const input = document.getElementById('user-input').value.toLowerCase();
-            const reply = document.getElementById('reply-area');
-
-            if (input.includes("911") || input.includes("emergency")) {
-                reply.innerHTML = translations[currentLang].emergencyReply;
-                const btn = document.querySelector('.emergency-btn');
-                btn.classList.add('pulse-alert');
-                setTimeout(() => btn.classList.remove('pulse-alert'), 3500);
-
-            } else if (calmTriggers.some(t => input.includes(t))) {
-                document.getElementById('calm-alby').style.display = 'block';
-                reply.innerText = translations[currentLang].received;
-
-            } else {
-                reply.innerText = translations[currentLang].received;
-            }
-
-            reply.style.display = 'block';
-            document.getElementById('user-input').value = "";
-        };
-    });
-
-    // 4. CALM TRIGGERS (shared)
-    const calmTriggers = [
-        "overwhelmed", "not okay", "lost",
-        "cant handle", "can't handle",
-        "don't know what to do", "dont know what to do"
-    ];
-</script>
+        /* CARDS */
+        .grid { display: grid; grid-template-columns: repeat(auto
